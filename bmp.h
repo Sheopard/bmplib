@@ -5,48 +5,49 @@
 #include <fstream>
 #include <vector>
 
-struct Image {
+class BMP {
+protected:	
 	struct BITMAPINFOHEADER {
-		int size;
-		int width;
-		int height;
-		short int planes;
-		short int bitCount;
-		int compression;
-		int sizeImage;
-		int XPelsPerMeter;
-		int YPelsPerMeter;
-		int colorUsed;
-		int colorImportant;
+		uint32_t size;
+		int32_t width;
+		int32_t height;
+		uint16_t planes;
+		uint16_t bitCount;
+		uint32_t compression;
+		uint32_t sizeImage;
+		int32_t XPelsPerMeter;
+		int32_t YPelsPerMeter;
+		uint32_t colorUsed;
+		uint32_t colorImportant;
 	};
 
 	struct BITMAPFILEHEADER {
-		short int type;
-		int size;
-		short int reserved1;
-		short int reserved2;
-		int offsetBits;
+		uint16_t type;
+		uint32_t size;
+		uint16_t reserved1;
+		uint16_t reserved2;
+		uint32_t offsetBits;
 	};
+
+	BITMAPFILEHEADER fHeader;
+	BITMAPINFOHEADER iHeader;
 
 	struct RGBTRIPLE {
 		uint8_t blue;
 		uint8_t green;
 		uint8_t red;
 	};
-	
-	BITMAPFILEHEADER fHeader;
-	BITMAPINFOHEADER iHeader;
-
-	virtual ~Image() {};
 public:
+	virtual ~BMP() {};
+	int32_t width() const;
+	int32_t height() const;
 	virtual void write(const std::string& filename) = 0;
 private:
 	virtual void load(const std::string& filename) = 0;	
 };
 
 
-class BMP8 : protected Image {
-private:
+class BMP8 : public BMP {
 	std::vector<uint8_t> pixels;
 	std::vector<RGBTRIPLE> pallete;
 public:
@@ -57,20 +58,14 @@ private:
 	void load(const std::string& filename) override final;
 };
 
-class BMP24 : protected Image {
-private:
+class BMP24 : public BMP {
   	std::vector<std::vector<RGBTRIPLE>> pixels;
-  
 public:
+	BMP24(int width, int height);
   	BMP24(const std::string& filename);
 	void write(const std::string& filename) override final;
-  	void write(const std::string& filename, std::vector<std::vector<RGBTRIPLE>>& dest);
-  	//int width() { return iHeader.width; };
-  	//int height() { return iHeader.height; };
-  	//RGBTRIPLE get_pixel(int i, int j) { return pixels[j][i]; };
-  	//std::vector<std::vector<RGBTRIPLE>> get_pixels() { return pixels; };
   	//std::vector<std::vector<int>> get_component(char color);
-  	//void to_bmp8(std::string& filename);
+  	void to_bmp8(const std::string& filename);
   
 private:
 	void load(const std::string& filename) override final;
