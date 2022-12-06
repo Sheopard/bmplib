@@ -8,7 +8,7 @@ int32_t BMP::height() const {
 	return iHeader.height;
 }
 
-BMP24::BMP24(int height, int width) {
+BMP24::BMP24(const int height, const int width) {
 	fHeader.type = 0x4d42;
 	fHeader.size = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER) + width * height * 3;
 	fHeader.offsetBits = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER);
@@ -20,14 +20,24 @@ BMP24::BMP24(int height, int width) {
 	iHeader.height = height;
 	iHeader.planes = 1;	
 
-	pixels.resize(height);
-	for (uint32_t i = 0; i < height; ++i) {
-		pixels[i].resize(width, {0, 0, 0});
-	}
+	pixels.resize(height * width);
 }
 
 BMP24::BMP24(const std::string& filename) {
-	this->load(filename);
+	try {
+		this->load(filename);
+		this->load_pixels(filename);
+	} catch (FileHeaderTypeException& e) {
+		std::cout << e.what() << "\n";
+	} catch (InfoHeaderSizeException& e) {
+		int old_offset = fHeader.offsetBits >= 54 ? fHeader.offsetBits - 54 : 0;
+		this->recover();
+		this->load_pixels(filename, old_offset);
+	} catch (InfoHeaderBitException& e) {
+		std::cout << e.what() << "\n";
+	} catch (std::ios_base::failure& e) {
+		std::cout << e.what() << "\n";
+	}
 }
 
 void BMP24::write(const std::string& filename) {
@@ -39,16 +49,15 @@ void BMP24::write(const std::string& filename) {
 	const int width = this->width();
 	const int height = this->height();
 	
-	int padding = 4 - (width * 3) % 4;
-	uint8_t zero_byte = 0;
+	const int padding = 4 - (width * 3) % 4;
+	const uint8_t zero_byte = 0;
 	for (uint32_t i = 0; i < height; ++i) {
 		for (uint32_t j = 0; j < width; ++j) {
-			fout.write(reinterpret_cast<char*>(&pixels[i][j]), sizeof(RGBTRIPLE));
+			fout.write(reinterpret_cast<char*>(&pixels[i * width + j]), sizeof(RGBTRIPLE));
 		}
 
 		if (padding != 4) {
-			std::cout << "here\n";
-			fout.write(reinterpret_cast<char*>(&zero_byte), padding);
+			fout.write(reinterpret_cast<const char*>(&zero_byte), padding);
 		}
 	}
 	fout.close();
@@ -62,30 +71,38 @@ void BMP24::load(const std::string& filename) {
 
 	fin.read(reinterpret_cast<char*>(&fHeader), sizeof(fHeader));
 	if (fHeader.type != 0x4d42) {
-		throw std::runtime_error("Error: Invalid BMP type!");
+		throw FileHeaderTypeException("Error: Invalid BMP type!");
 	}
 
 	fin.read(reinterpret_cast<char*>(&iHeader), sizeof(iHeader));
 	if (iHeader.size != 40) {
-		throw std::runtime_error("Error: Invalid InfoHeader size!");
+		throw InfoHeaderSizeException("Error: Invalid InfoHeader size!");
 	}
 
 	if (iHeader.bitCount != 24) {
-		throw std::runtime_error("Error: Invalid InfoHeader bit count!");
+		throw InfoHeaderBitException("Error: Invalid InfoHeader bit count!");
 	}
+
+	fin.close();
+}
+
+void BMP24::load_pixels(const std::string& filename, const int offset) {
+	std::ifstream fin(filename, std::ios_base::binary);
+	if (!fin.is_open()) {
+		throw std::ios_base::failure("Error: Image not open");
+	}
+
+	fin.seekg(fHeader.offsetBits, std::ios_base::cur);
+	fin.seekg(offset, std::ios_base::cur);
 
 	const int width = this->width();
 	const int height = this->height();
 
-	pixels.resize(height);
-	for (uint32_t i = 0; i < height; ++i) {
-		pixels[i].resize(width);
-	}
-
-	int padding = 4 - (width * 3) % 4;
+	pixels.resize(height * width);
+	const int padding = 4 - (width * 3) % 4;
 	for (uint32_t i = 0; i < height; ++i) {
 		for (uint32_t j = 0; j < width; ++j) {
-			fin.read(reinterpret_cast<char*>(&pixels[i][j]), sizeof(RGBTRIPLE));
+			fin.read(reinterpret_cast<char*>(&pixels[i * width + j]), sizeof(RGBTRIPLE));
 		}
 
 		if (padding != 4) {
@@ -95,7 +112,30 @@ void BMP24::load(const std::string& filename) {
 	fin.close();
 }
 
-BMP8 BMP24::grayscale() {
+void BMP24::recover() {
+	const int width = this->width();
+	const int height = this->height();
+
+	fHeader.type = 0x4d42;
+	fHeader.size = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER) + width * height * 3;
+	fHeader.reserved1 = 0;
+	fHeader.reserved2 = 0;
+	fHeader.offsetBits = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER);
+
+	iHeader.size = sizeof(BITMAPINFOHEADER);
+	iHeader.width = width;
+	iHeader.height = height;
+	iHeader.planes = 1;	
+	iHeader.bitCount = 24;
+	iHeader.compression = 0;
+	iHeader.sizeImage = width * height;
+	iHeader.XPelsPerMeter = 0;
+	iHeader.YPelsPerMeter = 0;
+	iHeader.colorUsed = 0;
+	iHeader.colorImportant = 0;
+}
+
+BMP8 BMP24::grayscale() const {
 	const int width = this->width();
 	const int height = this->height();
 
@@ -103,7 +143,7 @@ BMP8 BMP24::grayscale() {
   
   	for (int i = 0; i < height; i++) {
   		for (int j = 0; j < width; j++) {
-  			dest[i * width + j] = 0.299 * pixels[i][j].red + 0.587 * pixels[i][j].green + 0.114 * pixels[i][j].blue;
+  			dest[i * width + j] = 0.299 * pixels[i * width + j].red + 0.587 * pixels[i * width + j].green + 0.114 * pixels[i * width + j].blue;
   		}
   	}
 
@@ -112,33 +152,35 @@ BMP8 BMP24::grayscale() {
 	return image;
 }
 
-//std::vector<std::vector<int>> BMP24::get_component(char color) {
-//	std::vector<std::vector<int>> result(pixels.size(), std::vector<int>(pixels[0].size()));
-//
-//	if (color == 'r') {
-//		for (uint32_t i = 0; i < iHeader.height; i++) {
-//			for (uint32_t j = 0; j < iHeader.width; j++) {
-//				result[i][j] = pixels[i][j].red;
-//			}
-//		}
-//	}
-//	else if (color == 'g') {
-//		for (uint32_t i = 0; i < iHeader.height; i++) {
-//			for (uint32_t j = 0; j < iHeader.width; j++) {
-//				result[i][j] = pixels[i][j].green;
-//			}
-//		}
-//	}
-//	else if (color == 'b') {
-//		for (uint32_t i = 0; i < iHeader.height; i++) {
-//			for (uint32_t j = 0; j < iHeader.width; j++) {
-//				result[i][j] = pixels[i][j].blue;
-//			}
-//		}
-//	}
-//
-//	return result;
-//}
+std::vector<uint8_t> BMP24::get_component(const char color) {
+	const int width = this->width();
+	const int height = this->height();
+	std::vector<uint8_t> result(width * height);
+
+	if (color == 'r') {
+		for (uint32_t i = 0; i < height; i++) {
+			for (uint32_t j = 0; j < width; j++) {
+				result[i * width + j] = pixels[i * width + j].red;
+			}
+		}
+	}
+	else if (color == 'g') {
+		for (uint32_t i = 0; i < height; i++) {
+			for (uint32_t j = 0; j < width; j++) {
+				result[i * width + j] = pixels[i * width + j].green;
+			}
+		}
+	}
+	else if (color == 'b') {
+		for (uint32_t i = 0; i < height; i++) {
+			for (uint32_t j = 0; j < width; j++) {
+				result[i * width + j] = pixels[i * width + j].blue;
+			}
+		}
+	}
+
+	return result;
+}
 
 BMP8::BMP8(const int height, const int width, const std::vector<uint8_t>& src) {
 	fHeader.type = 0x4d42;
@@ -168,7 +210,20 @@ BMP8::BMP8(const int height, const int width, const std::vector<uint8_t>& src) {
 }
 
 BMP8::BMP8(const std::string& filename) {
-	this->load(filename);
+	try {
+		this->load(filename);
+		this->load_pixels(filename);
+	} catch (FileHeaderTypeException& e) {
+		std::cout << e.what() << "\n";
+	} catch (InfoHeaderSizeException& e) {
+		int old_offset = fHeader.offsetBits >= 54 ? fHeader.offsetBits - 54 : 0;
+		this->recover();
+		this->load_pixels(filename, old_offset);
+	} catch (InfoHeaderBitException& e) {
+		std::cout << e.what() << "\n";
+	} catch (std::ios_base::failure& e) {
+		std::cout << e.what() << "\n";
+	}
 }
 
 void BMP8::load(const std::string& filename) {
@@ -179,17 +234,66 @@ void BMP8::load(const std::string& filename) {
 
 	fin.read(reinterpret_cast<char*>(&fHeader), sizeof(fHeader));
 	if (fHeader.type != 0x4d42) {
-		throw std::runtime_error("Error: Invalid BMP type!");
+		throw FileHeaderTypeException("Error: Invalid BMP type!");
 	}
 
 	fin.read(reinterpret_cast<char*>(&iHeader), sizeof(iHeader));
 	if (iHeader.size != 40) {
-		throw std::runtime_error("Error: Invalid InfoHeader size!");
+		throw InfoHeaderSizeException("Error: Invalid InfoHeader size!");
 	}
 
 	if (iHeader.bitCount != 8) {
-		throw std::runtime_error("Error: Invalid InfoHeader bit count!");
+		throw InfoHeaderBitException("Error: Invalid InfoHeader bit count!");
 	}
+
+	const int image_size = this->width() * this->height();
+
+	pallete.resize(256);
+	for (uint16_t i = 0; i < 256; ++i) {
+		fin.read(reinterpret_cast<char*>(&pallete[i]), sizeof(RGBTRIPLE));
+		fin.seekg(1, std::ios_base::cur);
+	}
+	
+	pixels.resize(image_size);
+	const int pix_size = pixels.size();
+	for (uint32_t i = 0; i < pix_size; ++i) {
+		fin.read(reinterpret_cast<char*>(&pixels[i]), 1);
+	}
+	
+	fin.close();
+}
+
+void BMP8::recover() {
+	const int width = this->width();
+	const int height = this->height();
+
+	fHeader.type = 0x4d42;
+	fHeader.size = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER) + width * height + 4 * 256;
+	fHeader.reserved1 = 0;
+	fHeader.reserved2 = 0;
+	fHeader.offsetBits = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER);
+
+	iHeader.size = sizeof(BITMAPINFOHEADER);
+	iHeader.width = width;
+	iHeader.height = height;
+	iHeader.planes = 1;	
+	iHeader.bitCount = 8;
+	iHeader.compression = 0;
+	iHeader.sizeImage = width * height;
+	iHeader.XPelsPerMeter = 0;
+	iHeader.YPelsPerMeter = 0;
+	iHeader.colorUsed = 256;
+	iHeader.colorImportant = 0;
+}
+
+void BMP8::load_pixels(const std::string& filename, const int offset) {
+	std::ifstream fin(filename, std::ios_base::binary);
+	if (!fin.is_open()) {
+		throw std::ios_base::failure("Error: Image not open");
+	}
+
+	fin.seekg(fHeader.offsetBits, std::ios_base::cur);
+	fin.seekg(offset, std::ios_base::cur);
 
 	const int image_size = this->width() * this->height();
 

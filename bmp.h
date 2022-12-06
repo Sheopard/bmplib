@@ -5,6 +5,8 @@
 #include <fstream>
 #include <vector>
 
+#include "bmp_exceptions.h"
+
 class BMP {
 protected:	
 	#pragma pack(1)
@@ -46,10 +48,11 @@ public:
 	virtual void write(const std::string& filename) = 0;
 private:
 	virtual void load(const std::string& filename) = 0;	
+	virtual void load_pixels(const std::string& filename, const int offset) = 0;
 };
 
 
-class BMP8 : public BMP {
+class BMP8 final : public BMP {
 	std::vector<uint8_t> pixels;
 	std::vector<RGBTRIPLE> pallete;
 public:
@@ -57,20 +60,24 @@ public:
 	BMP8(const std::string& filename);
 	void write(const std::string& filename) override final;
 private:
+	void recover();
 	void load(const std::string& filename) override final;
+	void load_pixels(const std::string& filename, const int offset = 0) override final;
 };
 
-class BMP24 : public BMP {
-  	std::vector<std::vector<RGBTRIPLE>> pixels;
+class BMP24 final : public BMP {
+	std::vector<RGBTRIPLE> pixels;
 public:
-	BMP24(int height, int width);
+	BMP24(const int height, const int width);
   	BMP24(const std::string& filename);
 	void write(const std::string& filename) override final;
-  	//std::vector<std::vector<int>> get_component(char color);
-  	BMP8 grayscale();
+  	std::vector<uint8_t> get_component(const char color);
+  	BMP8 grayscale() const;
   
 private:
+	void recover();
 	void load(const std::string& filename) override final;
+	void load_pixels(const std::string& filename, const int offset = 0) override final;
 };
 
 #endif // !BMP_IMAGE_H_
