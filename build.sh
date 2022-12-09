@@ -11,5 +11,3 @@ cd $BUILD_DIR
 cmake ..
 
 cmake --build .
-
-cd ..
