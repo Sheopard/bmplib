@@ -1,5 +1,5 @@
-#ifndef BMP_EXCEPTION_H_
-#define BMP_EXCEPTION_H_
+#ifndef BMP_EXCEPTIONS_H_
+#define BMP_EXCEPTIONS_H_
 
 #include <string>
 #include <stdexcept>
@@ -19,4 +19,4 @@ public:
 	InfoHeaderBitException(const std::string& what_arg) : std::runtime_error(what_arg.c_str()) {}
 };
 
-#endif
+#endif // !BMP_EXCEPTIONS_H_
