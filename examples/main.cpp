@@ -3,8 +3,7 @@
 #include <vector>
 #include <memory>
 
-#include "src/bmp_exceptions.h"
-#include "src/bmp.h"
+#include "bmp.h"
 
 using namespace Images;
 
