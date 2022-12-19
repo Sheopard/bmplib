@@ -8,6 +8,7 @@
 using namespace Images;
 
 int main(int argc, char* argv[]) {
+
 	try {
 		/* BMP24 example */
 		std::unique_ptr<BMP24> image = std::make_unique<BMP24>("in.bmp");	

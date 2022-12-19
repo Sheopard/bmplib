@@ -99,5 +99,4 @@ private:
 };
 
 } // namespace Images
-
 #endif // !BMP_IMAGE_H_

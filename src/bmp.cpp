@@ -56,6 +56,7 @@ Images::BMP8& Images::BMP8::operator=(const BMP8& rhs) {
 	}
 
 	BMP8 result(rhs);
+
 	std::swap(result.fHeader, this->fHeader);
 	std::swap(result.iHeader, this->iHeader);
 	std::swap(result.pallete, this->pallete);
@@ -226,6 +227,7 @@ Images::BMP24& Images::BMP24::operator=(const BMP24& rhs) {
 	}
 
 	BMP24 result(rhs);
+
 	std::swap(result.fHeader, this->fHeader);
 	std::swap(result.iHeader, this->iHeader);
 	std::swap(result.pixels, this->pixels);
