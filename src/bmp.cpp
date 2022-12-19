@@ -9,7 +9,7 @@ int32_t Images::BMP::height() const {
 }
 
 Images::BMP8::BMP8(const int32_t height, const int32_t width, const std::vector<uint8_t>& src) {
-    this->make_bmp(height, width);
+	this->make_bmp(height, width);
 
 	pallete.resize(256);
   	for (uint16_t i = 0; i < 256; i++) {
@@ -24,55 +24,55 @@ Images::BMP8::BMP8(const std::string& filename) {
 		this->load(filename);
 		this->load_pixels(filename);
 	} catch (FileHeaderTypeException& e) {
-        throw;
+		throw;
 	} catch (InfoHeaderSizeException& e) {
 		int old_offset = fHeader.offsetBits >= 54 ? fHeader.offsetBits - 54 : 0;
 		this->recover();
 		this->load_pixels(filename, old_offset);
 	} catch (InfoHeaderBitException& e) {
-        throw;
+		throw;
 	} catch (std::ios_base::failure& e) {
-        throw;
+		throw;
 	}
 }
 
 Images::BMP8::BMP8(const BMP8& rhs)  {
-   fHeader = rhs.fHeader;
-   iHeader = rhs.iHeader;
-   std::copy(rhs.pallete.begin(), rhs.pallete.end(), std::back_inserter(pallete));
-   std::copy(rhs.pixels.begin(), rhs.pixels.end(), std::back_inserter(pixels)); 
+	fHeader = rhs.fHeader;
+	iHeader = rhs.iHeader;
+	std::copy(rhs.pallete.begin(), rhs.pallete.end(), std::back_inserter(pallete));
+	std::copy(rhs.pixels.begin(), rhs.pixels.end(), std::back_inserter(pixels)); 
 }
 
 Images::BMP8::BMP8(BMP8&& rhs) noexcept {
-    fHeader = std::move(rhs.fHeader);
-    iHeader = std::move(rhs.iHeader);
-    pallete = std::move(rhs.pallete);
-    pixels = std::move(rhs.pixels);
+	fHeader = std::move(rhs.fHeader);
+	iHeader = std::move(rhs.iHeader);
+	pallete = std::move(rhs.pallete);
+	pixels = std::move(rhs.pixels);
 }
 
 Images::BMP8& Images::BMP8::operator=(const BMP8& rhs) {
-    if (this == &rhs) {
-        return *this;
-    }
+	if (this == &rhs) {
+		return *this;
+	}
 
-    BMP8 result(rhs);
-    std::swap(result.fHeader, this->fHeader);
-    std::swap(result.iHeader, this->iHeader);
-    std::swap(result.pallete, this->pallete);
-    std::swap(result.pixels, this->pixels);
+	BMP8 result(rhs);
+	std::swap(result.fHeader, this->fHeader);
+	std::swap(result.iHeader, this->iHeader);
+	std::swap(result.pallete, this->pallete);
+	std::swap(result.pixels, this->pixels);
 
-    return *this;
+	return *this;
 }
 
 Images::BMP8& Images::BMP8::operator=(BMP8&& rhs) {
-    BMP8 result(std::move(rhs));
-    
-    std::swap(result.fHeader, this->fHeader);
-    std::swap(result.iHeader, this->iHeader);
-    std::swap(result.pallete, this->pallete);
-    std::swap(result.pixels, this->pixels);
+	BMP8 result(std::move(rhs));
 
-    return *this;
+	std::swap(result.fHeader, this->fHeader);
+	std::swap(result.iHeader, this->iHeader);
+	std::swap(result.pallete, this->pallete);
+	std::swap(result.pixels, this->pixels);
+
+	return *this;
 }
 
 void Images::BMP8::write(const std::string& filename) {
@@ -120,7 +120,7 @@ void Images::BMP8::make_bmp(int32_t height, int32_t width) {
 void Images::BMP8::recover() {
 	const int width = this->width();
 	const int height = this->height();
-    this->make_bmp(height, width);
+	this->make_bmp(height, width);
 }
 
 void Images::BMP8::load(const std::string& filename) {
@@ -187,7 +187,7 @@ void Images::BMP8::load_pixels(const std::string& filename, const uint32_t offse
 }
 
 Images::BMP24::BMP24(const int32_t height, const int32_t width) {
-    this->make_bmp(height, width);
+	this->make_bmp(height, width);
 	pixels.resize(height * width);
 }
 
@@ -196,51 +196,51 @@ Images::BMP24::BMP24(const std::string& filename) {
 		this->load(filename);
 		this->load_pixels(filename);
 	} catch (FileHeaderTypeException& e) {
-        throw;
+		throw;
 	} catch (InfoHeaderSizeException& e) {
 		int old_offset = fHeader.offsetBits >= 54 ? fHeader.offsetBits - 54 : 0;
 		this->recover();
 		this->load_pixels(filename, old_offset);
 	} catch (InfoHeaderBitException& e) {
-        throw;
+		throw;
 	} catch (std::ios_base::failure& e) {
-        throw;
+		throw;
 	}
 }
 
 Images::BMP24::BMP24(const BMP24& rhs) {
-    fHeader = rhs.fHeader;
-    iHeader = rhs.iHeader;
-    std::copy(rhs.pixels.begin(), rhs.pixels.end(), std::back_inserter(pixels));
+	fHeader = rhs.fHeader;
+	iHeader = rhs.iHeader;
+	std::copy(rhs.pixels.begin(), rhs.pixels.end(), std::back_inserter(pixels));
 }
 
 Images::BMP24::BMP24(BMP24&& rhs) noexcept {
-    fHeader = std::move(rhs.fHeader);
-    iHeader = std::move(rhs.iHeader);
-    pixels = std::move(rhs.pixels);
+	fHeader = std::move(rhs.fHeader);
+	iHeader = std::move(rhs.iHeader);
+	pixels = std::move(rhs.pixels);
 }
 
 Images::BMP24& Images::BMP24::operator=(const BMP24& rhs) {
-    if (this == &rhs) {
-        return *this;
-    }
+	if (this == &rhs) {
+		return *this;
+	}
 
-    BMP24 result(rhs);
-    std::swap(result.fHeader, this->fHeader);
-    std::swap(result.iHeader, this->iHeader);
-    std::swap(result.pixels, this->pixels);
+	BMP24 result(rhs);
+	std::swap(result.fHeader, this->fHeader);
+	std::swap(result.iHeader, this->iHeader);
+	std::swap(result.pixels, this->pixels);
 
-    return *this;
+	return *this;
 }
 
 Images::BMP24& Images::BMP24::operator=(BMP24&& rhs) {
-    BMP24 result(std::move(rhs));
-    
-    std::swap(result.fHeader, this->fHeader);
-    std::swap(result.iHeader, this->iHeader);
-    std::swap(result.pixels, this->pixels);
+	BMP24 result(std::move(rhs));
 
-    return *this;
+	std::swap(result.fHeader, this->fHeader);
+	std::swap(result.iHeader, this->iHeader);
+	std::swap(result.pixels, this->pixels);
+
+	return *this;
 }
 
 void Images::BMP24::write(const std::string& filename) {
@@ -336,7 +336,7 @@ void Images::BMP24::make_bmp(int32_t height, int32_t width) {
 void Images::BMP24::recover() {
 	const int width = this->width();
 	const int height = this->height();
-    this->make_bmp(height, width);
+	this->make_bmp(height, width);
 }
 
 void Images::BMP24::load(const std::string& filename) {

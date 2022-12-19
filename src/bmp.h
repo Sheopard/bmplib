@@ -49,7 +49,7 @@ public:
 	int32_t height() const;
 	virtual void write(const std::string& filename) = 0;
 private:
-    virtual void make_bmp(int32_t height, int32_t width) = 0;
+	virtual void make_bmp(int32_t height, int32_t width) = 0;
 	virtual void recover() = 0;
 	virtual void load(const std::string& filename) = 0;	
 	virtual void load_pixels(const std::string& filename, const uint32_t offset) = 0;
@@ -62,16 +62,16 @@ class BMP8 final : public BMP {
 public:
 	BMP8(const int32_t height, const int32_t width, const std::vector<uint8_t>& src);
 	explicit BMP8(const std::string& filename);
-    BMP8(const BMP8& rhs);
-    BMP8(BMP8&& rhs) noexcept;
+	BMP8(const BMP8& rhs);
+	BMP8(BMP8&& rhs) noexcept;
 
-    BMP8& operator=(const BMP8& rhs);
-    BMP8& operator=(BMP8&& rhs);
+	BMP8& operator=(const BMP8& rhs);
+	BMP8& operator=(BMP8&& rhs);
 
 	void write(const std::string& filename) override;
 	std::vector<uint8_t> get_pixels() const;
 private:
-    void make_bmp(int32_t height, int32_t width) override;
+	void make_bmp(int32_t height, int32_t width) override;
 	void recover() override;
 	void load(const std::string& filename) override;
 	void load_pixels(const std::string& filename, const uint32_t offset = 0) override;
@@ -82,17 +82,17 @@ class BMP24 final : public BMP {
 public:
 	BMP24(const int32_t height, const int32_t width);
   	explicit BMP24(const std::string& filename);
-    BMP24(const BMP24& rhs);
-    BMP24(BMP24&& rhs) noexcept;
+	BMP24(const BMP24& rhs);
+	BMP24(BMP24&& rhs) noexcept;
 
-    BMP24& operator=(const BMP24& rhs);
-    BMP24& operator=(BMP24&& rhs);
+	BMP24& operator=(const BMP24& rhs);
+	BMP24& operator=(BMP24&& rhs);
 
 	void write(const std::string& filename) override;
   	std::vector<uint8_t> get_component(const char color);
   	BMP8 grayscale() const;
 private:
-    void make_bmp(int32_t height, int32_t width) override;
+	void make_bmp(int32_t height, int32_t width) override;
 	void recover() override;
 	void load(const std::string& filename) override;
 	void load_pixels(const std::string& filename, const uint32_t offset = 0) override;
