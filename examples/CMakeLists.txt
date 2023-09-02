@@ -7,7 +7,7 @@ add_executable(bmp.exe main.cpp)
 set_target_properties(
   bmp.exe PROPERTIES
   CXX_STANDARD 14
-  CXX_STANDAR_REQUIRED ON
+  CXX_STANDARD_REQUIRED ON
 )
 
 target_include_directories(
